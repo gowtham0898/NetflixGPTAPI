@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.20" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.10" />
+    <PackageReference Include="Microsoft.Net.Http" Version="2.2.29" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Services\" />
+    <None Remove="Services\Authentication\" />
+    <None Remove="Infra\" />
+    <None Remove="Infra\DB\Dto\" />
+    <None Remove="Services\HttpClients\" />
+    <None Remove="Services\Movies\" />
+    <None Remove="Infra\DB\Repositories\Movie\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\" />
+    <Folder Include="Services\Authentication\" />
+    <Folder Include="Infra\" />
+    <Folder Include="Infra\DB\Dto\" />
+    <Folder Include="Services\HttpClients\" />
+    <Folder Include="Services\Movies\" />
+    <Folder Include="Infra\DB\Repositories\Movie\" />
+  </ItemGroup>
+</Project>
