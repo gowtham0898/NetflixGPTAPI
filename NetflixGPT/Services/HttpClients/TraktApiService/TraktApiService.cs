@@ -15,13 +15,15 @@ namespace NetflixGPT.Services.HttpClients.TraktApiService
         }
 
         public async Task<HttpResponseMessage> GetTrendingMovies(Dictionary<string, string> headers)
-        {
+        { 
             try
             {
                 //foreach (var header in headers)
                 //{
                 //    _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
                 //}
+
+
                 _httpClient.Timeout = TimeSpan.FromSeconds(30);
                 var result = await _httpClient.GetAsync("movies/trending");
                 return result;
