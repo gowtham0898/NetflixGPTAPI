@@ -24,6 +24,8 @@
     <None Remove="Services\HttpClients\" />
     <None Remove="Services\Movies\" />
     <None Remove="Infra\DB\Repositories\Movie\" />
+    <None Remove="Services\HttpClients\FanArtService\" />
+    <None Remove="Services\HttpClients\ClientResponseModel\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
@@ -33,5 +35,7 @@
     <Folder Include="Services\HttpClients\" />
     <Folder Include="Services\Movies\" />
     <Folder Include="Infra\DB\Repositories\Movie\" />
+    <Folder Include="Services\HttpClients\FanArtService\" />
+    <Folder Include="Services\HttpClients\ClientResponseModel\" />
   </ItemGroup>
 </Project>

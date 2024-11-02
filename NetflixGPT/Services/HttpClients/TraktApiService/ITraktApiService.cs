@@ -5,6 +5,8 @@ namespace NetflixGPT.Services.HttpClients.TraktApiService
     {
         Task<HttpResponseMessage> GetTrendingMovies(Dictionary<string, string> headers);
         Task<HttpResponseMessage> GetPopularMovies(Dictionary<string, string> headers);
+        Task<HttpResponseMessage> GetMovieDetails(string id);
+       
     }
 }
 

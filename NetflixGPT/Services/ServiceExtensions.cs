@@ -3,6 +3,7 @@ using NetflixGPT.Authentication;
 using NetflixGPT.infra.DB.Repositories.User;
 using NetflixGPT.Infra.DB.Repositories.Movie;
 using NetflixGPT.Services.Authentication;
+using NetflixGPT.Services.HttpClients.FanArtService;
 using NetflixGPT.Services.HttpClients.TraktApiService;
 using NetflixGPT.Services.Movies;
 
@@ -21,6 +22,7 @@ namespace NetflixGPT.Services
 			services.AddScoped<IMoviesService, MoviesService>();
 
 			services.AddScoped<IMovieRepository, MovieRepository>();
+			services.AddScoped<IFanArtService, FanArtService>();
             return services;
 		}
 	}	

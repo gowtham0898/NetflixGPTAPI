@@ -20,6 +20,8 @@ namespace NetflixGPT.infra.DB.Entities
         [BsonElement("category")]
         public string Category { get; set; }
 
+        [BsonElement("overview")]
+        public string? Overview { get; set; }
 
         [BsonElement("videoUrl")]
         public string? VideoUrl { get; set; }

@@ -3,6 +3,8 @@ using System.Text.Json;
 using NetflixGPT.infra.DB.Entities;
 using NetflixGPT.Infra.DB.Dto;
 using NetflixGPT.Infra.DB.Repositories.Movie;
+using NetflixGPT.Services.HttpClients.ClientResponseModel;
+using NetflixGPT.Services.HttpClients.FanArtService;
 using NetflixGPT.Services.HttpClients.TraktApiService;
 
 namespace NetflixGPT.Services.Movies
@@ -11,11 +13,12 @@ namespace NetflixGPT.Services.Movies
     {
         private readonly ITraktApiService _traktApiService;
         private readonly IMovieRepository _movieRepository;
-
-        public MoviesService(ITraktApiService traktApiService, IMovieRepository movieRepository)
+        private readonly IFanArtService _fanArtService;
+        public MoviesService(ITraktApiService traktApiService, IMovieRepository movieRepository,IFanArtService fanArtService)
         {
             _traktApiService = traktApiService;
             _movieRepository = movieRepository;
+            _fanArtService = fanArtService;
         }
 
         public async Task<List<MovieEntity>> GetPopulerMovies()
@@ -39,9 +42,10 @@ namespace NetflixGPT.Services.Movies
 
             var existingMovies = await _movieRepository.GetAllMovies(category: "populer");
 
-            if(populerMovies != null && populerMovies.Any())
+            if (populerMovies != null && populerMovies.Any())
             {
                 var newPopulerMovies = populerMovies.Where(x => !existingMovies.Any(y => x?.ids?.tmdb == y?.Ids?.Tmdb)).ToList();
+
                 if(newPopulerMovies != null && newPopulerMovies.Any())
                 {
                     List<MovieEntity> newMovies = newPopulerMovies.Select(newMovie => new MovieEntity
@@ -58,6 +62,31 @@ namespace NetflixGPT.Services.Movies
                         },
 
                     }).ToList();
+
+                    foreach (var eachMovie in newMovies)
+                    {
+                        var movieResult = await _traktApiService.GetMovieDetails(id: eachMovie.Ids.Slug);
+                        if (movieResult?.IsSuccessStatusCode ?? false)
+                        {
+                            var movieUrl = await GetMovieTrailer(movieResult);
+                            eachMovie.VideoUrl = movieUrl.Trailer;
+                            eachMovie.Overview = movieUrl.Overview;
+                            eachMovie.Id = null;
+                        }
+                    }
+
+                    foreach (var eachMoviePhoto in newMovies)
+                    {
+                        var moviePhotoResult = await _fanArtService.GetMovieimages(tmdbid: eachMoviePhoto.Ids.Tmdb);
+
+                        if (moviePhotoResult?.IsSuccessStatusCode ?? false)
+                        {
+                            var movieUrl = await GetMoviePosterUrl(moviePhotoResult);
+                            eachMoviePhoto.PhotoUrl = movieUrl;
+                            eachMoviePhoto.Id = null;
+                        }
+                    }
+
                     var createNewMovies = await _movieRepository.CreateMovies(newMovies);
                     existingMovies.AddRange(createNewMovies);
                 }
@@ -89,8 +118,8 @@ namespace NetflixGPT.Services.Movies
 
 
             var existingMovies = await _movieRepository.GetAllMovies(category: "trending");
-
-            if(trendingMovies != null && trendingMovies.Any())
+           
+            if (trendingMovies != null && trendingMovies.Any())
             {
                 var newTrendingMovies = trendingMovies.Where(x => !existingMovies?.Any(y => x?.movie?.ids?.tmdb == y?.Ids?.Tmdb) ?? true).ToList();
 
@@ -110,6 +139,31 @@ namespace NetflixGPT.Services.Movies
                         },
 
                     }).ToList();
+                    foreach (var eachMovie in newMovies)
+                    {
+                        var movieResult = await _traktApiService.GetMovieDetails(id: eachMovie.Ids.Slug);
+                        if (movieResult?.IsSuccessStatusCode ?? false)
+                        {
+                            var movieUrl = await GetMovieTrailer(movieResult);
+                            eachMovie.VideoUrl = movieUrl.Trailer;
+                            eachMovie.Overview = movieUrl.Overview;
+                            eachMovie.Id = null;
+                        }
+                    }
+
+                    foreach (var eachMoviePhoto in newMovies)
+                    {
+                        var moviePhotoResult = await _fanArtService.GetMovieimages(tmdbid: eachMoviePhoto.Ids.Tmdb);
+
+                        if (moviePhotoResult?.IsSuccessStatusCode ?? false)
+                        {
+                            var movieUrl = await GetMoviePosterUrl(moviePhotoResult);
+                            eachMoviePhoto.PhotoUrl = movieUrl;
+                            eachMoviePhoto.Id = null;
+                        }
+                    }
+
+
                     var createNewMovies = await _movieRepository.CreateMovies(newMovies);
                     existingMovies.AddRange(createNewMovies);
                 }
@@ -118,6 +172,72 @@ namespace NetflixGPT.Services.Movies
 
             return existingMovies;
         }
+
+
+        private async Task<MovieTrailerModel> GetMovieTrailer(HttpResponseMessage movieResult)
+        {
+            try
+            {
+                var movieJson = await movieResult.Content.ReadAsStringAsync();
+                string trailer = null;
+                string overview = null;
+                // Parse the JSON to get the trailer URL only
+                using (JsonDocument doc = JsonDocument.Parse(movieJson))
+                {
+                    // Extract the "trailer" field
+                    JsonElement root = doc.RootElement;
+                    if (root.TryGetProperty("trailer", out JsonElement trailerElement))
+                    {
+                        trailer =  trailerElement.GetString(); 
+                    }
+                    if (root.TryGetProperty("overview", out JsonElement overviewElement))
+                    {
+                        overview = overviewElement.GetString();
+                    }
+                }
+
+                return new MovieTrailerModel
+                {
+                    Overview = overview,
+                    Trailer = trailer
+                }; 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
+        }
+
+        private async Task<string> GetMoviePosterUrl(HttpResponseMessage moviePhotoResult)
+        {
+            try
+            {
+                var jsonMovieDetails = await moviePhotoResult.Content.ReadAsStringAsync();
+                var movieDetails = JsonSerializer.Deserialize<MoviePosterResponse>(jsonMovieDetails);
+
+                if(movieDetails != null && movieDetails?.movieposter != null)
+                {
+                    foreach (var logo in movieDetails.movieposter)
+                    {
+                        string logoUrl = logo.url.ToString();
+                        if (!string.IsNullOrEmpty(logoUrl))
+                        {
+                            return logoUrl; 
+                        }
+                    }
+                }
+
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Exception while fetching movie logo: {ex.Message}");
+
+            }
+            return null;
+        }
     }
+
+
 }
 
