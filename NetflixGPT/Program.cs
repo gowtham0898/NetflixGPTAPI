@@ -13,7 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
 
 builder.Services.AddSingleton<IMongoClient>(s => new MongoClient(builder.Configuration.GetConnectionString("MongoDb")));
+
 builder.Services.AddServiceCollections();
+
 builder.Services.AddSingleton<MongoDbService>();
 
 builder.Services.AddControllers();
@@ -67,6 +69,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 
 builder.Services.AddCors(options =>
 {

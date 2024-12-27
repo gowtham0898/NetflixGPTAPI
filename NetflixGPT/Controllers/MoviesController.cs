@@ -20,6 +20,7 @@ public class MoviesController : ControllerBase
         _moviesService = moviesService;
     }
 
+
     [HttpGet("populer")]
     public async Task<ActionResult<List<MovieEntity>>> GetPopulerMovies()
     {
